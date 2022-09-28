@@ -1,0 +1,83 @@
+name: Just-ssh
+on:
+  push:
+    branches: ["just-ssh"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  ssh-into:
+    name: ssh into the server
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: installing packages
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y zip git
+
+    - id: changed-files
+      name: Get changed files
+      uses: tj-actions/changed-files@v18.4
+    
+    - name: Zipping and copying to the destination
+      env:
+        SSH_KEY: ${{ secrets.SSH_KEY }}
+        LIVE_USER: ${{ secrets.USER }}
+        HOST: ${{ secrets.HOST }}
+        PORT: ${{ secrets.PORT }}
+        DEST: /home/ubuntu/pnm
+      run: |
+        echo -e "${SSH_KEY}" > keyfile
+        chmod 600 keyfile
+        zip -qq -r archive.zip *
+        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $LIVE_USER@$HOST:$DEST
+
+  # Unziping in destination
+    - name: Deploying artifacts on dihk-stage
+      uses: appleboy/ssh-action@master
+      env:
+        DEST: /home/ubuntu/pnm
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT }}
+        envs: DEST
+        script_stop: true
+        command_timeout: 15m
+        script: |
+          cd $DEST
+          unzip -qq -o archive.zip
+
+
+    - name: Delete deleted files from server
+      uses: appleboy/ssh-action@master
+      env:
+        DEST: /home/ubuntu/pnm
+      with:        
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: ${{ secrets.PORT }}
+        envs: DEST
+        script_stop: true
+        command_timeout: 15m
+        script: |
+          echo "-------------------------------------------------- Printing files ----------------------------------------------------------"
+          echo ${{ steps.changed-files.outputs.deleted_files }}
+          for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+            if [ ! -z $file ]
+              then
+                cd $DEST && rm ${{ steps.changed-files.outputs.deleted_files }}
+                for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+                  echo "$file was deleted from the server"
+                done
+              break
+            fi
+          done
