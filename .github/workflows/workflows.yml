@@ -41,8 +41,7 @@ jobs:
         script_stop: true
         command_timeout: 15m
         script: |
-          cd $DEST
-          unzip -qq -o archive.zip -d /home/pmuser/delete-files-test
+          unzip -qq -o /home/pmuser/delete-files-test/archive.zip -d /home/pmuser/delete-files-test
 
 
     - name: Delete deleted files from server
