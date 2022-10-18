@@ -19,57 +19,48 @@ jobs:
     
     - name: Zipping and copying to the destination
       env:
-        SSH_KEY: ${{ secrets.SSH_KEY }}
-        LIVE_USER: ${{ secrets.USER }}
-        HOST: ${{ secrets.HOST }}
-        PORT: ${{ secrets.PORT }}
-        DEST: /home/ubuntu/pnm
+        SSH_KEY: ${{ secrets.STAGE_KEY }}
+        LIVE_USER: ${{ secrets.STAGE_USERNAME }}
+        HOST: ${{ secrets.STAGE_HOST }}
+        PORT: ${{ secrets.STAGE_PORT }}
+        DEST: ${{ secrets.STAGE_SCP_URL }}
       run: |
         echo -e "${SSH_KEY}" > keyfile
         chmod 600 keyfile
         zip -qq -r archive.zip *
         scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $LIVE_USER@$HOST:$DEST
 
-  # Unziping in destination
     - name: Deploying artifacts on dihk-stage
       uses: appleboy/ssh-action@master
-      env:
-        DEST: /home/ubuntu/pnm
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.PORT }}
-        envs: DEST
+        host: ${{ secrets.STAGE_HOST }}
+        username: ${{ secrets.STAGE_USERNAME }}
+        key: ${{ secrets.STAGE_KEY }}
+        port: ${{ secrets.STAGE_PORT }}
         script_stop: true
         command_timeout: 15m
         script: |
-          cd $DEST
-          unzip -qq -o archive.zip
+          unzip -qq -o archive.zip -d /home/pmuser/delete-files-test
 
 
     - name: Delete deleted files from server
-      uses: appleboy/ssh-action@master
-      env:
-        DEST: /home/ubuntu/pnm
-      with:        
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USER }}
-        key: ${{ secrets.SSH_KEY }}
-        port: ${{ secrets.PORT }}
-        envs: DEST
-        script_stop: true
-        command_timeout: 15m
-        script: |
-          echo "-------------------------------------------------- Printing files ----------------------------------------------------------"
-          echo ${{ steps.changed-files.outputs.deleted_files }}
-          for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-            if [ ! -z $file ]
-              then
-                cd $DEST && rm ${{ steps.changed-files.outputs.deleted_files }}
-                for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-                  echo "$file was deleted from the server"
-                done
-              break
-            fi
-          done
+      env:        
+        SSH_KEY: ${{ secrets.STAGE_KEY }}
+        HOST: ${{ secrets.STAGE_HOST }}
+        USERNAME: ${{ secrets.STAGE_USERNAME }}
+        PORT: ${{ secrets.STAGE_PORT }}
+      run: |
+        mkdir -p ~/.ssh 
+        echo -e "${SSH_KEY}" >~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "All modified files are: ${{ steps.changed-files.outputs.all_modified_files }}"
+        for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+          if [ ! -z $file ]
+            then
+              ssh -p $PORT $USERNAME@$HOST "cd /data/www/stage/stage.dihk-bildung.shop/public && rm ${{ steps.changed-files.outputs.deleted_files }}"
+              for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+                echo "$file was deleted from the server"
+              done
+            break
+          fi
+        done
