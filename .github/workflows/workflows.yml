@@ -27,7 +27,6 @@ jobs:
       run: |
         echo -e "${SSH_KEY}" > keyfile
         cat keyfile
-        cat $PORT
         chmod 600 keyfile
         zip -qq -r archive.zip *
         scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip pmuser@188.40.100.182:/home/pmuser/delete-files-test
