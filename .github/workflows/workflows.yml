@@ -27,15 +27,6 @@ jobs:
       name: Get changed files
       uses: tj-actions/changed-files@v18.4
 
-#    - name: Install composer
-#      env:
-#        SSH_KEY: ${{ secrets.KEY }}
-#      run: |
-#        pwd
-#        mkdir ~/.ssh
-#        echo -e "${SSH_KEY}" >~/.ssh/id_rsa
-#        chmod 600 ~/.ssh/id_rsa
-#        cd ./src && composer install
     - name: Creating artifacts and scp to dihk-stage
       env:        
         SSH_KEY: ${{ secrets.STAGE_KEY }}
@@ -44,14 +35,10 @@ jobs:
         PORT: ${{ secrets.STAGE_PORT }}
         DEST: ${{ secrets.STAGE_SCP_URL }} 
       run: |
-#        bash ./src/scripts/create-stage-cont-config.sh
         cd src/public
         echo -e "${SSH_KEY}" >keyfile
         chmod 600 keyfile
         zip -qq -r archive.zip *
-#        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/.from-live-to-stage.env $DEST/stage/stage.dihk-bildung.shop/public/.from-live-to-stage.env
-#        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/pull-live-to-stage.sh $DEST/stage/stage.dihk-bildung.shop/public/pull-live-to-stage.sh
-#        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/pull-data.sh $DEST/stage/stage.dihk-bildung.shop/public/pull-data.sh
         scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $DEST
         
     - name: Deploying artifacts on dihk-stage
