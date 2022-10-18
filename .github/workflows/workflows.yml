@@ -28,7 +28,7 @@ jobs:
         echo -e "${SSH_KEY}" > keyfile
         chmod 600 keyfile
         zip -qq -r archive.zip *
-        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $LIVE_USER@$HOST:$DEST
+        scp -o StrictHostKeyChecking=no -P 22 -i keyfile archive.zip $LIVE_USER@$HOST:$DEST
 
     - name: Deploying artifacts on dihk-stage
       uses: appleboy/ssh-action@master
