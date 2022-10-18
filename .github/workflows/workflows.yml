@@ -51,9 +51,6 @@ jobs:
         echo -e "${SSH_KEY}" >keyfile
         chmod 600 keyfile
         zip -qq -r archive.zip *
-    #    scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/.from-live-to-stage.env $DEST/stage/stage.dihk-bildung.shop/public/.from-live-to-stage.env
-    #    scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/pull-live-to-stage.sh $DEST/stage/stage.dihk-bildung.shop/public/pull-live-to-stage.sh
-    #    scp -o StrictHostKeyChecking=no -P $PORT -i keyfile ../scripts/pull-data.sh $DEST/stage/stage.dihk-bildung.shop/public/pull-data.sh
         scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $DEST
         
     - name: Deploying artifacts on dihk-stage
