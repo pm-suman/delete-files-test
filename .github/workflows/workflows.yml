@@ -58,7 +58,7 @@ jobs:
         for file in ${{ steps.changed-files.outputs.deleted_files }}; do
           if [ ! -z $file ]
             then
-              ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test/sub && rm ${{ steps.changed-files.outputs.deleted_files }}"
+              ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && rm ${{ steps.changed-files.outputs.deleted_files }}"
               for file in ${{ steps.changed-files.outputs.deleted_files }}; do
                 echo "$file was deleted from the server"
               done
