@@ -46,7 +46,6 @@ jobs:
         PORT: ${{ secrets.STAGE_PORT }}
         DEST: ${{ secrets.STAGE_SCP_URL }} 
       run: |
-#        bash ./src/scripts/create-stage-cont-config.sh
         cd src/public
         echo -e "${SSH_KEY}" >keyfile
         chmod 600 keyfile
