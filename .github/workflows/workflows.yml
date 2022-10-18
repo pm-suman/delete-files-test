@@ -25,7 +25,7 @@ jobs:
         PORT: ${{ secrets.STAGE_PORT }}
         DEST: ${{ secrets.STAGE_SCP_URL }}
       run: |
-        echo -e "${SSH_KEY}" > keyfile
+        echo -e "${SSH_KEY}" >keyfile
         chmod 600 keyfile
         zip -qq -r archive.zip *
         scp -o StrictHostKeyChecking=no -P 22 -i keyfile archive.zip pmuser@188.40.100.182:/home/pmuser/delete-files-test
