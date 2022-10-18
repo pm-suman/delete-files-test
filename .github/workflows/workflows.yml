@@ -1,195 +1,64 @@
-name: Stage
-
-on:
-  push:
-    branches:
-    - 'delete-files-test'
-jobs:
-
-  build:
-
+--- 
+jobs: 
+  build: 
     runs-on: ubuntu-latest
-
-    steps:
-    #- name: Notify the start
-    #  uses: innocarpe/actions-slack@v1
-    #  with:
-    #    status: ${{ job.status }}
-    #    success_text: '<!subteam^S1ABC2DEF> @${{ github.actor }} just started the workflow for `${{ github.ref }}` to deploy to *Stage*' 
-    #  env:
-    #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 1
-    
-    - id: changed-files
-      name: Get changed files
-      uses: tj-actions/changed-files@v18.4
-
-    #- name: Install composer
-    #  env:
-    #    SSH_KEY: ${{ secrets.KEY }}
-    #  run: |
-    #    pwd
-    #    mkdir ~/.ssh
-    #    echo -e "${SSH_KEY}" >~/.ssh/id_rsa
-    #    chmod 600 ~/.ssh/id_rsa
-    #    cd ./src && composer install
-    
-    - name: Creating artifacts and scp to dihk-stage
-      env:        
-        SSH_KEY: ${{ secrets.STAGE_KEY }}
-        LIVE_USER: ${{ secrets.STAGE_USERNAME }}
-        HOST: ${{ secrets.STAGE_HOST }}
-        PORT: ${{ secrets.STAGE_PORT }}
-        DEST: ${{ secrets.STAGE_SCP_URL }} 
-      run: |
-        cd src/public
-        echo -e "${SSH_KEY}" >keyfile
-        chmod 600 keyfile
-        zip -qq -r archive.zip *
-        scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $DEST
-        
-    - name: Deploying artifacts on dihk-stage
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.STAGE_HOST }}
-        username: ${{ secrets.STAGE_USERNAME }}
-        key: ${{ secrets.STAGE_KEY }}
-        port: ${{ secrets.STAGE_PORT }}
-        script_stop: true
-        command_timeout: 15m
-        script: |
-          unzip -qq -o archive.zip -d /home/pmuser/delete-files-test
-          
-    #- name: Resetting opchache
-    #  run: |
-    #    curl https://stage.dihk-bildung.shop/018094167be88a9feb3778dd1cda4dbe.php
-
-    #- name: Rebuilding SEO indexes on dihk-stage
-    #  uses: appleboy/ssh-action@master
-    #  with:
-    #    host: ${{ secrets.STAGE_HOST }}
-    #    username: ${{ secrets.STAGE_USERNAME }}
-    #    key: ${{ secrets.STAGE_KEY }}
-    #    port: ${{ secrets.STAGE_PORT }}
-    #    script_stop: true
-    #    command_timeout: 15m
-    #    script: |
-    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:rebuild:seo:index
-
-    #- name: Compiling the theme on dihk-stage
-    #  uses: appleboy/ssh-action@master
-    #  with:
-    #    host: ${{ secrets.STAGE_HOST }}
-    #    username: ${{ secrets.STAGE_USERNAME }}
-    #    key: ${{ secrets.STAGE_KEY }}
-    #    port: ${{ secrets.STAGE_PORT }}
-    #    script_stop: true
-    #    command_timeout: 15m
-    #    script: | 
-    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:theme:cache:generate
-
-    #- name: Clearing the cache on dihk-stage
-    #  uses: appleboy/ssh-action@master
-    #  with:
-    #    host: ${{ secrets.STAGE_HOST }}
-    #    username: ${{ secrets.STAGE_USERNAME }}
-    #    key: ${{ secrets.STAGE_KEY }}
-    #    port: ${{ secrets.STAGE_PORT }}
-    #    script_stop: true
-    #    command_timeout: 15m
-    #    script: |
-    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:cache:clear
-
-    - name: Delete deleted files from server
-      env:        
-        SSH_KEY: ${{ secrets.STAGE_KEY }}
-        HOST: ${{ secrets.STAGE_HOST }}
-        USERNAME: ${{ secrets.STAGE_USERNAME }}
-        PORT: ${{ secrets.STAGE_PORT }}
-      run: |
-        mkdir -p ~/.ssh 
-        echo -e "${SSH_KEY}" >~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-          if [ ! -z $file ]
-            then
-              ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && rm ${{ steps.changed-files.outputs.deleted_files }}"
-              for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-                echo "$file was deleted from the server"
-              done
-            break
-          fi
-        done
-
-
-
-
-#    - name: Cleaning-up ES index on dihk-stage
-#      uses: appleboy/ssh-action@master
-#      with:
-#        host: ${{ secrets.STAGE_HOST }}
-#        username: ${{ secrets.STAGE_USERNAME }}
-#        key: ${{ secrets.STAGE_KEY }}
-#        port: ${{ secrets.STAGE_PORT }}
-#        script_stop: true
-#        command_timeout: 15m
-#        script: |
-#          php7.2 ~/stage/stage.dihk-bildung.shop/public/bin/console sw:es:index:cleanup
-#    - name: Populating ES on dihk-stage
-#      uses: appleboy/ssh-action@master
-#      with:
-#        host: ${{ secrets.STAGE_HOST }}
-#        username: ${{ secrets.STAGE_USERNAME }}
-#        key: ${{ secrets.STAGE_KEY }}
-#        port: ${{ secrets.STAGE_PORT }}
-#        script_stop: true
-#        command_timeout: 15m
-#        script: |
-#          n=0; until [ $n -ge 5 ]; do php7.2 ~/stage/stage.dihk-bildung.shop/public/bin/console pm:es:index:populate && break; n=$[$n+1]; sleep 10; done
-#          echo retry_count=$n
-#          php7.2 ~/stage/stage.dihk-bildung.shop/public/bin/console pm:es:index:populate
-#  failure2:
-#    needs: [build]
-#    if: failure()
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Notify the end
-#      uses: innocarpe/actions-slack@v1
-#      with:
-#        status: ${{ job.status }}
-#        success_text: '<!subteam^S1ABC2DEF> The Stage deployment *FAILED* :x: '
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL_MAIN }}
-#  failure:
-#    needs: [build]
-#    if: failure()
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Notify the end
-#      uses: innocarpe/actions-slack@v1
-#      with:
-#        status: ${{ job.status }}
-#        success_text: '<!subteam^S1ABC2DEF> The Stage deployment *FAILED* :x: '
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-#  successed:
-#    needs: [build]
-#    if: success()
-#    runs-on: ubuntu-latest
-#    steps:
-#    - name: Notify the end
-#      uses: innocarpe/actions-slack@v1
-#      with:
-#        status: ${{ job.status }}
-#        success_text:  '<!subteam^S1ABC2DEF> Stage build deployed! :white_check_mark: '
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-#
-#
+    steps: 
+      - 
+        uses: actions/checkout@v3
+        with: 
+          fetch-depth: 1
+      - 
+        id: changed-files
+        name: "Get changed files"
+        uses: tj-actions/changed-files@v18.4
+      - 
+        env: 
+          DEST: "${{ secrets.STAGE_SCP_URL }}"
+          HOST: "${{ secrets.STAGE_HOST }}"
+          LIVE_USER: "${{ secrets.STAGE_USERNAME }}"
+          PORT: "${{ secrets.STAGE_PORT }}"
+          SSH_KEY: "${{ secrets.STAGE_KEY }}"
+        name: "Creating artifacts and scp to dihk-stage"
+        run: |
+            cd src/public
+            echo -e "${SSH_KEY}" >keyfile
+            chmod 600 keyfile
+            zip -qq -r archive.zip *
+            scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $DEST
+      - 
+        name: "Deploying artifacts on dihk-stage"
+        uses: appleboy/ssh-action@master
+        with: 
+          command_timeout: 15m
+          host: "${{ secrets.STAGE_HOST }}"
+          key: "${{ secrets.STAGE_KEY }}"
+          port: "${{ secrets.STAGE_PORT }}"
+          script: "unzip -qq -o archive.zip -d /home/pmuser/delete-files-test\n"
+          script_stop: true
+          username: "${{ secrets.STAGE_USERNAME }}"
+      - 
+        env: 
+          HOST: "${{ secrets.STAGE_HOST }}"
+          PORT: "${{ secrets.STAGE_PORT }}"
+          SSH_KEY: "${{ secrets.STAGE_KEY }}"
+          USERNAME: "${{ secrets.STAGE_USERNAME }}"
+        name: "Delete deleted files from server"
+        run: |
+            mkdir -p ~/.ssh 
+            echo -e "${SSH_KEY}" >~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+              if [ ! -z $file ]
+                then
+                  ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && rm ${{ steps.changed-files.outputs.deleted_files }}"
+                  for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+                    echo "$file was deleted from the server"
+                  done
+                break
+              fi
+            done
+name: Stage
+true: 
+  push: 
+    branches: 
+      - delete-files-test
