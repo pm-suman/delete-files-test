@@ -28,15 +28,16 @@ jobs:
       name: Get changed files
       uses: tj-actions/changed-files@v18.4
 
-    - name: Install composer
-      env:
-        SSH_KEY: ${{ secrets.KEY }}
-      run: |
-        pwd
-        mkdir ~/.ssh
-        echo -e "${SSH_KEY}" >~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        cd ./src && composer install
+    #- name: Install composer
+    #  env:
+    #    SSH_KEY: ${{ secrets.KEY }}
+    #  run: |
+    #    pwd
+    #    mkdir ~/.ssh
+    #    echo -e "${SSH_KEY}" >~/.ssh/id_rsa
+    #    chmod 600 ~/.ssh/id_rsa
+    #    cd ./src && composer install
+    
     - name: Creating artifacts and scp to dihk-stage
       env:        
         SSH_KEY: ${{ secrets.STAGE_KEY }}
@@ -67,42 +68,45 @@ jobs:
         script: |
           unzip -qq -o archive.zip -d /home/pmuser/delete-files-test
           
-    - name: Resetting opchache
-      run: |
-        curl https://stage.dihk-bildung.shop/018094167be88a9feb3778dd1cda4dbe.php  
-    - name: Rebuilding SEO indexes on dihk-stage
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.STAGE_HOST }}
-        username: ${{ secrets.STAGE_USERNAME }}
-        key: ${{ secrets.STAGE_KEY }}
-        port: ${{ secrets.STAGE_PORT }}
-        script_stop: true
-        command_timeout: 15m
-        script: |
-          ~/stage/stage.dihk-bildung.shop/public/bin/console sw:rebuild:seo:index
-    - name: Compiling the theme on dihk-stage
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.STAGE_HOST }}
-        username: ${{ secrets.STAGE_USERNAME }}
-        key: ${{ secrets.STAGE_KEY }}
-        port: ${{ secrets.STAGE_PORT }}
-        script_stop: true
-        command_timeout: 15m
-        script: | 
-          ~/stage/stage.dihk-bildung.shop/public/bin/console sw:theme:cache:generate
-    - name: Clearing the cache on dihk-stage
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.STAGE_HOST }}
-        username: ${{ secrets.STAGE_USERNAME }}
-        key: ${{ secrets.STAGE_KEY }}
-        port: ${{ secrets.STAGE_PORT }}
-        script_stop: true
-        command_timeout: 15m
-        script: |
-          ~/stage/stage.dihk-bildung.shop/public/bin/console sw:cache:clear
+    #- name: Resetting opchache
+    #  run: |
+    #    curl https://stage.dihk-bildung.shop/018094167be88a9feb3778dd1cda4dbe.php
+
+    #- name: Rebuilding SEO indexes on dihk-stage
+    #  uses: appleboy/ssh-action@master
+    #  with:
+    #    host: ${{ secrets.STAGE_HOST }}
+    #    username: ${{ secrets.STAGE_USERNAME }}
+    #    key: ${{ secrets.STAGE_KEY }}
+    #    port: ${{ secrets.STAGE_PORT }}
+    #    script_stop: true
+    #    command_timeout: 15m
+    #    script: |
+    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:rebuild:seo:index
+
+    #- name: Compiling the theme on dihk-stage
+    #  uses: appleboy/ssh-action@master
+    #  with:
+    #    host: ${{ secrets.STAGE_HOST }}
+    #    username: ${{ secrets.STAGE_USERNAME }}
+    #    key: ${{ secrets.STAGE_KEY }}
+    #    port: ${{ secrets.STAGE_PORT }}
+    #    script_stop: true
+    #    command_timeout: 15m
+    #    script: | 
+    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:theme:cache:generate
+
+    #- name: Clearing the cache on dihk-stage
+    #  uses: appleboy/ssh-action@master
+    #  with:
+    #    host: ${{ secrets.STAGE_HOST }}
+    #    username: ${{ secrets.STAGE_USERNAME }}
+    #    key: ${{ secrets.STAGE_KEY }}
+    #    port: ${{ secrets.STAGE_PORT }}
+    #    script_stop: true
+    #    command_timeout: 15m
+    #    script: |
+    #      ~/stage/stage.dihk-bildung.shop/public/bin/console sw:cache:clear
 
     - name: Delete deleted files from server
       env:        
