@@ -1,4 +1,4 @@
-name: Just-ssh
+name: Stage
 on:
   push:
     branches: ["delete-files-test"]
