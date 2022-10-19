@@ -59,12 +59,7 @@ jobs:
           if [ ! -z $file ]
             then
               for space in ${{ steps.changed-files.outputs.deleted_files }}; do
-                if [ ! -z $space ]
-                  then
-                    ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && find . -type f -name '* *' -delete "
-                else
-                  ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && rm ${{ steps.changed-files.outputs.deleted_files }}"
-                fi
+                ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && find . -type f -name '* *' -delete "
                 for file in ${{ steps.changed-files.outputs.deleted_files }}; do
                   echo "$file was deleted from the server"
                 done
