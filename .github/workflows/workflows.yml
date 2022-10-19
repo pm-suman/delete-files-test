@@ -64,11 +64,12 @@ jobs:
                     ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && find . -type f -name '* *' -delete "
                 else
                   ssh -p $PORT $USERNAME@$HOST "cd /home/pmuser/delete-files-test && rm ${{ steps.changed-files.outputs.deleted_files }}"
-                  for file in ${{ steps.changed-files.outputs.deleted_files }}; do
-                    echo "$file was deleted from the server"
-                  done
-                break
+                fi
+                for file in ${{ steps.changed-files.outputs.deleted_files }}; do
+                  echo "$file was deleted from the server"
+                done
+#                break
               done
-            break
+#            break
           fi
         done
