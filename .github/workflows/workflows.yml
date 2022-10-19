@@ -68,8 +68,6 @@ jobs:
                 for file in ${{ steps.changed-files.outputs.deleted_files }}; do
                   echo "$file was deleted from the server"
                 done
-#                break
               done
-#            break
           fi
         done
