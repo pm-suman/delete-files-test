@@ -30,6 +30,7 @@ jobs:
         pwd
         ls
         cd sub
+        pwd
         zip -qq -r ../archive.zip *
         cd ..
         scp -o StrictHostKeyChecking=no -P $PORT -i keyfile archive.zip $LIVE_USER@$HOST:$DEST
